@@ -1,4 +1,6 @@
+"use client";
 import { Button } from "@/components/ui/button";
+import handleSignOut from "@/features/auth/utils/signOut";
 import Link from "next/link";
 import React from "react";
 import { FaArrowRightToBracket } from "react-icons/fa6";
@@ -11,12 +13,19 @@ export default function Page() {
           <h1 className="text-primary text-2xl sm:text-3xl font-bold">
             Welcome, Admin
           </h1>
-          <Link href={"/"} className="text-red-500 hover:underline">
-            <div className="flex items-center gap-1">
-              <FaArrowRightToBracket />
-              <p>Logout</p>
-            </div>
-          </Link>
+          <button
+            onClick={async () => {
+              await handleSignOut({
+                callbackUrl: "/",
+              });
+            }}
+            className="flex items-center gap-1 text-red-500 hover:underline"
+          >
+            <FaArrowRightToBracket />
+            <p>Logout</p>
+          </button>
+          {/* <Link href={"/"} className=" ">
+          </Link> */}
         </div>
         <p className="mb-8">
           This is the admin page, changes made here will affect the public site

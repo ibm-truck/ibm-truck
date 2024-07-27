@@ -1,4 +1,5 @@
 "use client";
+import AdminNav from "@/components/navigation/admin-nav";
 import { SingleImageDropzone } from "@/components/single-image-dropzone";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/logo";
@@ -10,8 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEdgeStore } from "@/lib/edgestore";
+import { addTruck } from "@/services/post";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 
 type Inputs = {
   name: string;
@@ -21,37 +26,61 @@ type Inputs = {
 };
 
 export default function Page() {
+  const router = useRouter();
+
   const [condition, setCondition] = useState<Inputs["condition"]>("New");
   const [imageUrl, setImageUrl] = useState({ url: "", error: true });
   const [uploading, setUploading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationKey: ["add-truck-hire"],
+    mutationFn: addTruck,
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<Inputs>();
-  const onSubmit: SubmitHandler<Inputs> = (data) => {
+  const onSubmit: SubmitHandler<Inputs> = async ({ image, name, price }) => {
     if (!imageUrl.error) {
-      const truckData = {
-        name: data.name,
-        price: Number(data.price),
-        condition,
+      await mutateAsync({
         imageUrl: imageUrl.url,
-      };
-      console.log("truckData: ", truckData);
+        name,
+        price: Number(price),
+        condition,
+        purpose: "Hire",
+      })
+        .then((res) => {
+          if ("id" in res) {
+            toast.success("Uploaded Successfully");
+            window.location.reload();
+            return;
+          }
+          if (res.response.status !== 200) {
+            toast.error(res.response.data.message);
+          } else {
+            toast.success(res.response.data.message);
+            router.refresh();
+          }
+        })
+        .catch((err) => {
+          toast.error(err.response.data.message);
+        });
     }
   };
   const [file, setFile] = useState<File>();
   const { edgestore } = useEdgeStore();
   return (
     <main>
-      <div className="bg-black text-white grid place-content-center py-2">
-        <Logo />
-      </div>
+      <AdminNav />
       <section className="container mt-10 px-4 mb-10">
-        <h1 className="text-2xl sm:text-3xl font-bold">Add a new truck for hire</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">
+          Add a new truck for hire
+        </h1>
         <p className="text-neutral-700 mb-5">
-          Trucks added here will reflect in the truck for hire list on the public site
+          Trucks added here will reflect in the truck for hire list on the
+          public site
         </p>
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -63,7 +92,6 @@ export default function Page() {
             value={file}
             onChange={(file) => {
               setFile(file);
-              console.log("The file", file);
               if (!file) {
                 setImageUrl({ url: "", error: true });
               }
@@ -79,15 +107,10 @@ export default function Page() {
                   setUploading(true);
                   const res = await edgestore.publicFiles.upload({
                     file,
-                    onProgressChange: (progress) => {
-                      // you can use this to show a progress bar
-                      console.log(progress);
-                    },
                   });
                   // you can run some server action or api here
                   // to add the necessary data to your database
                   setUploading(false);
-                  console.log(res);
                   setImageUrl({ url: res.url, error: false });
                 }
               }}
@@ -158,10 +181,10 @@ export default function Page() {
           </div>
 
           <Button
-            disabled={uploading || submitting}
+            disabled={uploading || isPending}
             className="hover:bg-blue-500"
           >
-            {submitting ? "Submitting..." : "Submit"}
+            {isPending ? "Submitting..." : "Submit"}
           </Button>
         </form>
       </section>

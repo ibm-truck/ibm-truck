@@ -1,10 +1,15 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { login } from "@/features/auth/services/post";
+import { ArrowLeft, ArrowRight, Loader } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { FaShield } from "react-icons/fa6";
+import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from 'next-auth/react';
 
 type Inputs = {
   email: string;
@@ -12,15 +17,48 @@ type Inputs = {
 };
 
 export default function Page() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
   } = useForm<Inputs>();
-  const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
+  const { mutateAsync, isPending } = useMutation({
+    mutationKey: ["login"],
+    mutationFn: login,
+  });
+  const callBackParam = useSearchParams();
+  const callBackUrl = callBackParam.get('callbackUrl');
 
-  console.log(watch("email")); // watch input value by passing the name of it
+
+  const OnSubmit = async ({ email, password }: Inputs) => {
+    await mutateAsync({ email, password })
+      .then((res) => {
+        if (res.status !== 200) {
+          toast.error(res.data.message);
+        } else {
+          void signIn('credentials', {
+            email,
+            password,
+            redirect: false
+          }).then((res) => {
+            toast.success('Login Successful');
+            if (callBackUrl) {
+              window.location.href = callBackUrl;
+            } else {
+              window.location.href = '/admin';
+            }
+          });
+          // toast.success(res.data.message);
+          // router.push("/admin");
+        }
+      })
+      .catch((err) => {
+        toast.error(err.response.data.message);
+      });
+  };
+
   return (
     <main className="bg-neutral-100 min-h-screen grid place-content-center px-4">
       <div className="container">
@@ -30,7 +68,7 @@ export default function Page() {
           </div>
         </Link>
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(OnSubmit)}
           className="max-w-[600px] shadow-md sm:w-[500px] w-full px-3 py-5 bg-white rounded-md flex flex-col gap-5"
         >
           <div className="text-primary font-semibold flex items-center gap-2">
@@ -73,7 +111,13 @@ export default function Page() {
             )}
           </div>
 
-          <Button className="hover:bg-blue-500">Login</Button>
+          <Button
+            disabled={isPending}
+            className="hover:bg-blue-500 flex items-center gap-1"
+          >
+            <p>Login</p>{" "}
+            {isPending && <Loader className="animate-spin" size={20} />}
+          </Button>
         </form>
       </div>
     </main>

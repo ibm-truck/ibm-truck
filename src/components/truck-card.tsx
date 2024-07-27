@@ -1,6 +1,7 @@
 "use client";
 import { conditon } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { deletePart, deleteTruck } from "@/services/delete";
 import { Loader, Trash } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
@@ -11,14 +12,18 @@ interface TruckCardProps {
   imageUrl: string;
   condition: conditon;
   deletefn?: boolean;
+  id: string;
+  part?: boolean;
 }
 
 export default function TruckCard({
   name,
   price,
   imageUrl,
+  id,
   condition,
   deletefn,
+  part,
 }: TruckCardProps) {
   const [deleting, setDeleting] = useState(false);
   return (
@@ -35,10 +40,12 @@ export default function TruckCard({
         <button
           onClick={async () => {
             setDeleting(true);
-            setTimeout(() => {
-              setDeleting(false);
-            }, 1000);
-            console.log("hello");
+            if (part) {
+              await deletePart({ id });
+            } else {
+              await deleteTruck({ id });
+            }
+            window.location.reload();
           }}
           title="delete"
           aria-label="delete"

@@ -1,5 +1,5 @@
 import type { NextAuthOptions } from "next-auth";
-import CredentialsProvider from 'next-auth/providers/credentials';
+import CredentialsProvider from "next-auth/providers/credentials";
 
 export const options: NextAuthOptions = {
   providers: [
@@ -18,12 +18,16 @@ export const options: NextAuthOptions = {
         },
       },
       async authorize(credentials) {
-        const user = { id: "42", name: "Dave", password: "nextauth" };
+        const res = await fetch(
+          `${process.env.NEXTAUTH_URL}/api/user/auth/login/info`,
+          {
+            method: "POST",
+            body: JSON.stringify(credentials),
+          }
+        );
+        const user = await res.json();
 
-        if (
-          credentials?.username === user.name &&
-          credentials?.password === user.password
-        ) {
+        if (user) {
           return user;
         } else {
           return null;
@@ -31,7 +35,13 @@ export const options: NextAuthOptions = {
       },
     }),
   ],
-  //   pages: {
-  //     signIn: ''
-  //   }
+  pages: {
+    signIn: "/login",
+    error: "/login",
+    signOut: "/login",
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 60 * 60 * 24,
+  },
 };

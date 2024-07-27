@@ -3,40 +3,12 @@ import Navbar from "@/components/navigation/navbar";
 import Footer from "@/components/navigation/footer";
 import Image from "next/image";
 import ContactCard from "@/components/contact-card";
+import { getDrivers } from "@/services/get";
+import { Trash } from "lucide-react";
 
-interface IDriver {
-  name: string;
-  imageUrl: string;
-}
+export default async function Page() {
+  const drivers = await getDrivers();
 
-const drivers: IDriver[] = [
-  {
-    name: "Bassey John David",
-    imageUrl:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs20EoPRsAX43jfj7gRBiveymqSCHev1tKvg&s",
-  },
-  {
-    name: "Chukwudi Okeke",
-    imageUrl:
-      "https://explorepartsunknown.com/wp-content/uploads/2017/10/005-area-boys-nigeria-tom-saater-8821.jpg?quality=95&strip=color&w=1280&h=0",
-  },
-  {
-    name: "Abdul Musa",
-    imageUrl: "https://i.ytimg.com/vi/YF8TFqKiKdQ/mqdefault.jpg",
-  },
-  {
-    name: "Tunde Adebayo",
-    imageUrl:
-      "https://explorepartsunknown.com/wp-content/uploads/2017/10/007-area-boys-nigeria-tom-saater-8909.jpg?quality=95&strip=color&w=625&h=0",
-  },
-  {
-    name: "Emeka Nwankwo",
-    imageUrl:
-      "https://cdn.pmnewsnigeria.com/wp-content/uploads/2022/02/SAMO-AGBERO.jpg",
-  },
-];
-
-export default function Page() {
   return (
     <main className="bg-neutral-100">
       <header className="bg-black text-white">
@@ -56,22 +28,26 @@ export default function Page() {
         </p>
         <ContactCard />
         <div className="flex flex-col divide-y divide-neutral-400">
-          {drivers.map((driver, index) => (
-            <article key={index} className="flex gap-3 p-1">
-              <div className="h-[100px] w-[100px] relative">
-                <Image
-                  src={driver.imageUrl}
-                  alt="Driver Image"
-                  fill
-                  unoptimized
-                  className="relative h-full w-full object-cover"
-                />
-              </div>
-              <div>
-                <h1>{driver.name}</h1>
-              </div>
-            </article>
-          ))}
+          {drivers.length > 0 ? (
+            drivers.map((driver, index) => (
+              <article key={index} className="flex gap-3 p-1">
+                <div className="h-[100px] w-[100px] relative">
+                  <Image
+                    src={driver.imageUrl}
+                    alt="Driver Image"
+                    fill
+                    unoptimized
+                    className="relative h-full w-full object-cover"
+                  />
+                </div>
+                <div className="flex justify-between">
+                  <h1>{driver.name}</h1>
+                </div>
+              </article>
+            ))
+          ) : (
+            <div>No driver info uploaded yet</div>
+          )}
         </div>
       </section>
       <Footer />
