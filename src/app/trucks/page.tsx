@@ -4,6 +4,7 @@ import Navbar from "@/components/navigation/navbar";
 import Footer from "@/components/navigation/footer";
 import ContactCard from "@/components/contact-card";
 import { getTrucksSell } from "@/services/get";
+import { conditon } from "@/lib/types";
 
 export default async function Page() {
   const trucks = await getTrucksSell();
@@ -26,11 +27,12 @@ export default async function Page() {
           {trucks.length > 0 ? (
             trucks.map((truck, index) => (
               <TruckCard
+                id={truck.id}
                 key={index}
                 name={truck.name}
                 price={truck.price}
                 imageUrl={truck.imageUrl}
-                condition={truck.condition}
+                condition={truck.condition as conditon}
               />
             ))
           ) : (
