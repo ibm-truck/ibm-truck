@@ -1,15 +1,15 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { login } from "@/features/auth/services/post";
-import { ArrowLeft, ArrowRight, Loader } from "lucide-react";
+import { ArrowLeft, Loader } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { FaShield } from "react-icons/fa6";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from 'next-auth/react';
+import { useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 type Inputs = {
   email: string;
@@ -17,20 +17,15 @@ type Inputs = {
 };
 
 export default function Page() {
-  const router = useRouter();
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<Inputs>();
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ["login"],
     mutationFn: login,
   });
-  const callBackParam = useSearchParams();
-  const callBackUrl = callBackParam.get('callbackUrl');
-
 
   const OnSubmit = async ({ email, password }: Inputs) => {
     await mutateAsync({ email, password })
@@ -38,17 +33,14 @@ export default function Page() {
         if (res.status !== 200) {
           toast.error(res.data.message);
         } else {
-          void signIn('credentials', {
+          void signIn("credentials", {
             email,
             password,
-            redirect: false
+            redirect: false,
           }).then((res) => {
-            toast.success('Login Successful');
-            if (callBackUrl) {
-              window.location.href = callBackUrl;
-            } else {
-              window.location.href = '/admin';
-            }
+            toast.success("Login Successful");
+
+            window.location.href = "/admin";
           });
           // toast.success(res.data.message);
           // router.push("/admin");
